@@ -14,17 +14,17 @@ def load_and_clean_data(file_path):
     df = pd.read_csv(file_path)
 
     # manufacturer & kategori
-    df['manufacturer'].fillna('Unknown', inplace=True)
-    df['amazon_category_and_sub_category'].fillna('Unknown', inplace=True)
+    df['manufacturer'] = df['manufacturer'].fillna('Unknown', inplace=True)
+    df['amazon_category_and_sub_category'] = df['amazon_category_and_sub_category'].fillna('Unknown', inplace=True)
 
     # price
     df['price'] = df['price'].astype(str).str.replace('£', '').str.strip()
     df['price'] = pd.to_numeric(df['price'], errors='coerce')
-    df['price'].fillna(df['price'].median(), inplace=True)
+    df['price'] = df['price'].fillna(df['price'].median(), inplace=True)
 
     # number_of_reviews
     df['number_of_reviews'] = pd.to_numeric(df['number_of_reviews'], errors='coerce')
-    df['number_of_reviews'].fillna(df['number_of_reviews'].median(), inplace=True)
+    df['number_of_reviews'] = df['number_of_reviews'].fillna(df['number_of_reviews'].median(), inplace=True)
 
     # average_review_rating
     df['average_review_rating'] = df['average_review_rating'].apply(
@@ -32,12 +32,12 @@ def load_and_clean_data(file_path):
         if pd.notnull(x) and re.search(r'(\d+\.\d+)', str(x))
         else np.nan
     )
-    df['average_review_rating'].fillna(df['average_review_rating'].median(), inplace=True)
+    df['average_review_rating'] = df['average_review_rating'].fillna(df['average_review_rating'].median(), inplace=True)
 
     # teks kolom
-    df['description'].fillna('', inplace=True)
-    df['product_information'].fillna('', inplace=True)
-    df['product_description'].fillna('', inplace=True)
+    df['description'] = df['description'].fillna('', inplace=True)
+    df['product_information'] = df['product_information'].fillna('', inplace=True)
+    df['product_description'] = df['product_description'].fillna('', inplace=True)
 
     return df
 
