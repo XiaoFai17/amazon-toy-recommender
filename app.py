@@ -17,13 +17,14 @@ st.markdown("""
         }
 
         .marquee-track {
-            display: flex;
-            width: fit-content;
-            animation: marquee 30s linear infinite;
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 50s linear infinite;
         }
 
         .marquee-track img {
             height: 100px;
+            min-width: 100px;
             margin: 0 20px;
             background: white;
             padding: 10px;
@@ -33,9 +34,9 @@ st.markdown("""
 
         @keyframes marquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            100% { transform: translateX(-100%); }
         }
-       
+            
         footer {
             text-align: center;
             padding: 20px;
@@ -59,6 +60,7 @@ st.markdown("#### 🔍 Jelajahi berdasarkan Merek Populer")
 
 manufacturer_logos = [
     ("LEGO", "lego.jpg"),
+    ("Hot Wheels", "hotwheels.webp"),
     ("Disney", "disney.png"),
     ("Oxford Diecast", "oxford.webp"),
     ("Playmobil", "playmobil.png"),
@@ -67,11 +69,10 @@ manufacturer_logos = [
     ("Hasbro", "hasbro.png"),
     ("The Puppet Company", "thepuppetcompany.png"),
     ("My Tiny World", "mytinyworld.png"),
-    ("Hot Wheels", "hotwheels.webp"),
 ]
 
 # duplikat untuk animasi marquee
-logos_full = manufacturer_logos + manufacturer_logos
+logos_full = manufacturer_logos * 3
 
 scroll_html = "<div class='marquee-container'><div class='marquee-track'>"
 for brand, filename in logos_full:
