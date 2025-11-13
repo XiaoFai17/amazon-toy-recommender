@@ -66,7 +66,7 @@ def prepare_features(df):
     # TF-IDF kategori
     df['category_text'] = df['amazon_category_and_sub_category'].str.replace('>', ' ', regex=False)
     df['category_text'] = df['category_text'].apply(clean_text)
-    vectorizer_category = TfidfVectorizer(max_features=1000)
+    vectorizer_category = TfidfVectorizer(max_features=300)
     category_tfidf_matrix = vectorizer_category.fit_transform(df['category_text'])
 
     # TF-IDF teks gabungan
@@ -75,7 +75,7 @@ def prepare_features(df):
         df['product_information'].fillna('') + ' ' +
         df['product_description'].fillna('')
     ).apply(clean_text)
-    vectorizer_text = TfidfVectorizer(max_features=5000)
+    vectorizer_text = TfidfVectorizer(max_features=1000)
     text_tfidf_matrix = vectorizer_text.fit_transform(df['combined_text'])
 
     # manufacturer encoding

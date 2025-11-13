@@ -90,7 +90,7 @@ st.markdown("---")
 
 # === LOAD DATA DAN SIAPKAN FITUR ===
 # Use st.cache_data for heavy computations like model loading and feature preparation.
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_data_pipeline():
     """Load dataset dan siapkan fitur untuk sistem rekomendasi."""
     # Ensure the data file path is correct relative to the Streamlit app
