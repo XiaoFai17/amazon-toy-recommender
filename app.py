@@ -14,34 +14,28 @@ st.markdown("""
             overflow: hidden;
             background-color: #f8f8f8;
             padding: 20px 0;
+            position: relative;
         }
 
         .marquee-track {
-            display: inline-block;
-            white-space: nowrap;
-            animation: marquee 50s linear infinite;
+            display: flex;
+            width: max-content;
+            animation: scroll-left 40s linear infinite;
         }
 
         .marquee-track img {
             height: 100px;
-            min-width: 100px;
             margin: 0 20px;
             background: white;
             padding: 10px;
             border-radius: 15px;
             box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
-        @keyframes marquee {
+        @keyframes scroll-left {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-            
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #888;
-            font-size: 14px;
+            100% { transform: translateX(-50%); }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -72,7 +66,7 @@ manufacturer_logos = [
 ]
 
 # duplikat untuk animasi marquee
-logos_full = manufacturer_logos * 3
+logos_full = manufacturer_logos + manufacturer_logos
 
 scroll_html = "<div class='marquee-container'><div class='marquee-track'>"
 for brand, filename in logos_full:
