@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import re
+import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
@@ -11,6 +12,10 @@ from scipy.sparse import hstack
 # ---------------------------------
 def load_and_clean_data(file_path):
     """Membaca dan membersihkan dataset mainan Amazon."""
+    # Check if file exists before reading
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File data tidak ditemukan di: {file_path}")
+        
     df = pd.read_csv(file_path)
 
     # manufacturer & kategori
@@ -18,7 +23,8 @@ def load_and_clean_data(file_path):
     df['amazon_category_and_sub_category'] = df['amazon_category_and_sub_category'].fillna('Unknown')
 
     # price
-    df['price'] = df['price'].astype(str).str.replace('£', '').str.strip()
+    # Use a more robust regex to handle various currency symbols and ensure proper cleaning
+    df['price'] = df['price'].astype(str).str.replace(r'[^\d\.]', '', regex=True).str.strip()
     df['price'] = pd.to_numeric(df['price'], errors='coerce')
     df['price'] = df['price'].fillna(df['price'].median())
 
@@ -47,6 +53,8 @@ def load_and_clean_data(file_path):
 # ---------------------------------
 def clean_text(text):
     """Membersihkan teks: huruf kecil, hapus simbol, dan spasi berlebih."""
+    if not isinstance(text, str):
+        text = str(text)
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
@@ -83,7 +91,7 @@ def prepare_features(df):
         scaled_numeric,
         columns=[col + '_scaled' for col in numeric_cols]
     )
-    df = pd.concat([df, scaled_numeric_df], axis=1)
+    df = pd.concat([df.reset_index(drop=True), scaled_numeric_df], axis=1)
 
     numeric_scaled_matrix = scaled_numeric_df.values
 
@@ -104,26 +112,25 @@ def prepare_features(df):
 # ---------------------------------
 # 3. Pencarian Rekomendasi
 # ---------------------------------
-def search_product(df, keyword):
-    """Mencari produk berdasarkan nama (case-insensitive)."""
-    return df[df["product_name"].str.contains(keyword, case=False, na=False)]
-
-
-def recommend_products(df, product_name, similarity_matrix, n=5):
+# Updated function to take product index instead of product name
+def recommend_products(df, product_index, similarity_matrix, n=5):
     """Memberikan rekomendasi produk mirip berdasarkan kemiripan konten."""
-    matches = df[df["product_name"] == product_name]
+    
+    # Check if the index is valid
+    if product_index not in df.index:
+        return None
 
-    if matches.empty:
-        return None  # biar Streamlit bisa tampilkan warning sendiri
-
-    idx = matches.index[0]
-
-    sim_scores = list(enumerate(similarity_matrix[idx]))
+    # Get the similarity scores for the product at the given index
+    sim_scores = list(enumerate(similarity_matrix[product_index]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1 : n + 1]  # lewati dirinya sendiri
+    
+    # Get the scores for the top N products (skipping the first one which is the product itself)
+    sim_scores = sim_scores[1 : n + 1]
 
     indices = [i[0] for i in sim_scores]
-    return df.iloc[indices][["product_name", "manufacturer", "price", "average_review_rating"]]
+    
+    # Return the recommended products' details
+    return df.iloc[indices][["product_name", "manufacturer", "price", "average_review_rating", "amazon_category_and_sub_category"]]
 
 
 # ---------------------------------

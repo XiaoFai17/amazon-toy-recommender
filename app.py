@@ -35,7 +35,7 @@ st.markdown("""
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-
+       
         footer {
             text-align: center;
             padding: 20px;
@@ -89,14 +89,30 @@ st.markdown(scroll_html, unsafe_allow_html=True)
 st.markdown("---")
 
 # === LOAD DATA DAN SIAPKAN FITUR ===
+# Use st.cache_data for heavy computations like model loading and feature preparation.
 @st.cache_data(show_spinner=False)
 def load_data_pipeline():
     """Load dataset dan siapkan fitur untuk sistem rekomendasi."""
-    file_path = "data/amazon_co-ecommerce_sample.csv"
+    # Ensure the data file path is correct relative to the Streamlit app
+    file_path = os.path.join(os.path.dirname(__file__), "data", "amazon_co-ecommerce_sample.csv")
     return load_and_prepare_model(file_path)
 
-with st.spinner("🔄 Memuat data dan menyiapkan fitur..."):
-    df, combined_matrix, similarity_matrix, vectorizer_category, vectorizer_text, scaler = load_data_pipeline()
+# Check if data is already loaded in session state
+if 'df' not in st.session_state:
+    with st.spinner("🔄 Memuat data dan menyiapkan fitur..."):
+        # The load_data_pipeline function returns 6 objects
+        (
+            st.session_state.df,
+            st.session_state.combined_matrix,
+            st.session_state.similarity_matrix,
+            st.session_state.vectorizer_category,
+            st.session_state.vectorizer_text,
+            st.session_state.scaler
+        ) = load_data_pipeline()
+
+# Assign variables from session state for cleaner code
+df = st.session_state.df
+similarity_matrix = st.session_state.similarity_matrix
 
 # === DISPLAY CARD ===
 def display_product_card(product):
@@ -104,7 +120,11 @@ def display_product_card(product):
     st.markdown("----")
     st.subheader(product.get("product_name", "—"))
     st.markdown(f"**Manufacturer**: {product.get('manufacturer', 'Unknown')}")
-    st.markdown(f"**Price**: £{product.get('price', '—')}")
+    # Format price to two decimal places
+    price = product.get('price', '—')
+    if isinstance(price, (int, float)):
+        price = f"{price:.2f}"
+    st.markdown(f"**Price**: £{price}")
     st.markdown(f"**Average Rating**: ⭐ {product.get('average_review_rating', '—')}")
     st.markdown(f"**Category**: `{product.get('amazon_category_and_sub_category', '—')}`")
     st.markdown("----")
@@ -113,12 +133,14 @@ def display_product_card(product):
 keyword = st.text_input("🔍 Cari mainan berdasarkan nama atau merek (contoh: hotwheels, lego)")
 
 if keyword:
-    mask = df["product_name"].str.contains(keyword, case=False, na=False) | \
-           df["manufacturer"].str.contains(keyword, case=False, na=False)
+    # Use .str.lower() for case-insensitive search on columns that might contain NaN
+    mask = df["product_name"].str.lower().str.contains(keyword.lower(), na=False) | \
+           df["manufacturer"].str.lower().str.contains(keyword.lower(), na=False)
     filtered_df = df[mask]
 
     if not filtered_df.empty:
-        selected_product_name = st.selectbox("🎯 Pilih Produk:", filtered_df["product_name"].unique())
+        # Use a key for the selectbox to prevent Streamlit warning
+        selected_product_name = st.selectbox("🎯 Pilih Produk:", filtered_df["product_name"].unique(), key="product_select")
 
         if selected_product_name:
             selected_product = df[df["product_name"] == selected_product_name].iloc[0]
@@ -128,7 +150,12 @@ if keyword:
 
             if st.button("🔁 Tampilkan Rekomendasi"):
                 st.markdown("## 🏱 Produk Rekomendasi")
-                recommendations = recommend_products(df, selected_product_name, similarity_matrix, n=10)
+                
+                # Get the index of the selected product
+                selected_idx = df[df["product_name"] == selected_product_name].index[0]
+                
+                # Call the updated recommend_products function
+                recommendations = recommend_products(df, selected_idx, similarity_matrix, n=10)
 
                 if recommendations is not None and not recommendations.empty:
                     for _, row in recommendations.iterrows():
