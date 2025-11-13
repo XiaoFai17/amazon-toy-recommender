@@ -1,0 +1,8 @@
+[server]
+headless = true
+
+[general]
+page_title = "Amazon Toy Recommender"
+page_icon = "🎁"
+# Thumbnail (tidak semua versi Streamlit membaca ini, tapi aman ditambahkan)
+thumbnail = "app.png"
